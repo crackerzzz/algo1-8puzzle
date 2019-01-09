@@ -1,4 +1,7 @@
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 import edu.princeton.cs.algs4.In;
 
@@ -14,7 +17,7 @@ public class Board {
 	 */
 	public Board(int[][] blocks) {
 		this.n = blocks.length;
-		this.blocks = Arrays.copyOf(blocks, this.n);
+		this.blocks = deepCopy(blocks);
 	}
 
 	/***
@@ -44,33 +47,63 @@ public class Board {
 		return outOfPlace;
 	}
 
-	private Cell findEmptyBlock() {
-		for (int i = 0; i < n; i++) {
-			for (int j = 0; j < n; j++) {
-				if (blocks[i][j] == 0) {
-					new Cell(i, j);
-				}
-			}
-		}
-		return null;
-	}
-
 	/**
 	 * sum of Manhattan distances between blocks and goal
 	 * 
 	 * @return
 	 */
 	public int manhattan() {
-		return -1;
+		int distance = 0;
+		for (int i = 0; i < n; i++) {
+			for (int j = 0; j < n; j++) {
+
+				// skip empty block i.e. value with 0
+				if (blocks[i][j] == 0) {
+					continue;
+				}
+
+				// calculate actual element that should be in the cell.
+				final int goal = i * n + j + 1;
+
+				// if not same, determine what cell that element should be in and calculate the
+				// distance. The correct row and column can be determined by reverse of above
+				// goal calculation.
+				if (blocks[i][j] != goal) {
+					final int x = blocks[i][j] / n;
+					final int y = blocks[i][j] % n;
+					final int t = Math.abs(x - i) + Math.abs(j - y);
+					distance += t;
+				}
+			}
+		}
+		return distance;
 	}
 
 	/***
 	 * is this board the goal board?
 	 * 
-	 * @return
+	 * @return true if goal board has been reached.
 	 */
 	public boolean isGoal() {
-		return false;
+		// just check the last block to see if it is the goal, i.e should contain 0.
+		if (blocks[n - 1][n - 1] != 0) {
+			return false;
+		}
+
+		for (int i = 0; i < n; i++) {
+			for (int j = 0; j < n; j++) {
+				// skip the last cell as this has already been covered by earlier check. Also
+				// the calculation doesn't work for last cell.
+				if (i == n - 1 && j == n - 1) {
+					continue;
+				}
+				int goal = i * n + j + 1;
+				if (blocks[i][j] != goal) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	// a board that is obtained by exchanging any pair of blocks
@@ -98,6 +131,84 @@ public class Board {
 
 	// all neighboring boards
 	public Iterable<Board> neighbors() {
+		final int[] emptyCell = findEmptyBlock(blocks);
+		final int i = emptyCell[0];
+		final int j = emptyCell[1];
+
+		final List<List<Integer>> neighbouringCells = buildNeighbouringCells(i, j, this.n);
+		final List<Board> neighbourBoards = new ArrayList<>(neighbouringCells.size());
+
+		for (final List<Integer> n : neighbouringCells) {
+			final int x = n.get(0);
+			final int y = n.get(1);
+
+			final int[][] copy = deepCopy(blocks);
+			swap(copy, i, j, x, y);
+			neighbourBoards.add(new Board(copy));
+		}
+
+		return new Iterable<Board>() {
+			@Override
+			public Iterator<Board> iterator() {
+				return neighbourBoards.iterator();
+			}
+		};
+	}
+
+	private static void swap(int[][] array, int x1, int y1, int x2, int y2) {
+		int temp = array[x1][y1];
+		array[x1][y1] = array[x2][y2];
+		array[x2][y2] = temp;
+	}
+
+	private static List<List<Integer>> buildNeighbouringCells(int i, int j, int size) {
+		final List<List<Integer>> list = new ArrayList<>();
+		int tempI = i - 1;
+		for (int x = 0; x < 3; x++) {
+			// skip out of boundary cases
+			if (tempI < 0 || tempI >= size) {
+				tempI++;
+				continue;
+			}
+			int tempJ = j - 1;
+			for (int y = 0; y < 3; y++) {
+				// skip out of boundary cases or self
+				if ((tempI == i && tempJ == j) || tempJ < 0 || tempJ >= size) {
+					tempJ++;
+					continue;
+				}
+				final List<Integer> inner;
+				list.add(inner = new ArrayList<>(2));
+				inner.add(tempI);
+				inner.add(tempJ);
+				tempJ++;
+			}
+			tempI++;
+		}
+		return list;
+	}
+
+	public static int[][] deepCopy(int[][] original) {
+		if (original == null) {
+			return null;
+		}
+
+		final int[][] result = new int[original.length][];
+		for (int i = 0; i < original.length; i++) {
+			result[i] = Arrays.copyOf(original[i], original[i].length);
+		}
+		return result;
+	}
+
+	private static int[] findEmptyBlock(int[][] original) {
+		final int n = original.length;
+		for (int i = 0; i < n; i++) {
+			for (int j = 0; j < n; j++) {
+				if (original[i][j] == 0) {
+					return new int[] { i, j };
+				}
+			}
+		}
 		return null;
 	}
 
@@ -111,10 +222,14 @@ public class Board {
 	public String toString() {
 		final StringBuilder builder = new StringBuilder();
 		int prefix = 1;
-		if (n >= 10) {
-			prefix = 2;
-		} else if (n >= 100) {
+		// if n is more than 9 means there will values more than 100, so three spaces
+		// needs to be reserved
+		if (n > 9) {
 			prefix = 3;
+		} else if (n > 3) {
+			// if n is more than 3 means there will values more than 10, so two spaces
+			// needs to be reserved
+			prefix = 2;
 		}
 		for (int[] rows : blocks) {
 			for (int col : rows) {
@@ -126,20 +241,9 @@ public class Board {
 		return builder.toString();
 	}
 
-	private static class Cell {
-		public final int i;
-		public final int j;
-
-		public Cell(int i, int j) {
-			super();
-			this.i = i;
-			this.j = j;
-		}
-	}
-
 	public static void main(String[] args) {
 		// read in the board specified in the filename
-		In in = new In("./8puzzle/puzzle00.txt");
+		In in = new In("./8puzzle/puzzle03.txt");
 		int n = in.readInt();
 		int[][] tiles = new int[n][n];
 		for (int i = 0; i < n; i++) {
@@ -148,10 +252,17 @@ public class Board {
 			}
 		}
 
-		// solve the slider puzzle
+//		// solve the slider puzzle
 		Board initial = new Board(tiles);
 		System.out.println(initial);
-		System.out.println(initial.hamming());
+		System.out.println("hamming: " + initial.hamming());
+		System.out.println("manhattan: " + initial.manhattan());
+		System.out.println("isGoal: " + initial.isGoal());
+		System.out.println("Neighbours: ");
+		for (Board b : initial.neighbors()) {
+			System.out.println(b);
+		}
+
 	}
 
 }
