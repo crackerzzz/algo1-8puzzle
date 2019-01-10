@@ -69,9 +69,10 @@ public class Board {
 				// distance. The correct row and column can be determined by reverse of above
 				// goal calculation.
 				if (blocks[i][j] != goal) {
-					final int x = blocks[i][j] / n;
-					final int y = blocks[i][j] % n;
-					final int t = Math.abs(x - i) + Math.abs(j - y);
+					final int k = blocks[i][j] - 1;
+					final int x = k / n;
+					final int y = k % n;
+					final int t = Math.abs(x - i) + Math.abs(y - j);
 					distance += t;
 				}
 			}
@@ -243,7 +244,7 @@ public class Board {
 
 	public static void main(String[] args) {
 		// read in the board specified in the filename
-		In in = new In("./8puzzle/puzzle03.txt");
+		In in = new In("./8puzzle/puzzle-my.txt");
 		int n = in.readInt();
 		int[][] tiles = new int[n][n];
 		for (int i = 0; i < n; i++) {

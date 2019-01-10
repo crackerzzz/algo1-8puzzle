@@ -34,7 +34,6 @@ public class Solver {
 				.filter(b -> min.predecessor == null || (min.predecessor != null && !min.predecessor.equals(b)))
 				.map(b -> new SearchNode(min.current, b, finalMoves))
 				.forEach(s -> {
-					System.out.println(s);
 					pq.insert(s);
 				});
 		} while (true);
@@ -99,28 +98,33 @@ public class Solver {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		String filename = "./8puzzle/puzzle02.txt";
-		// read in the board specified in the filename
-		In in = new In(filename);
-		int n = in.readInt();
-		int[][] tiles = new int[n][n];
-		for (int i = 0; i < n; i++) {
-			for (int j = 0; j < n; j++) {
-				tiles[i][j] = in.readInt();
+		int start = 12;
+		int end = 12;
+		for (int x = start; x <= end; x++) {
+			String filename = String.format("./8puzzle/puzzle%02d.txt", x);
+			System.out.println("File: " + filename);
+			// read in the board specified in the filename
+			In in = new In(filename);
+			int n = in.readInt();
+			int[][] tiles = new int[n][n];
+			for (int i = 0; i < n; i++) {
+				for (int j = 0; j < n; j++) {
+					tiles[i][j] = in.readInt();
+				}
 			}
-		}
 
-		// solve the slider puzzle
-		Board initial = new Board(tiles);
-		Solver solver = new Solver(initial);
+			// solve the slider puzzle
+			Board initial = new Board(tiles);
+			Solver solver = new Solver(initial);
 
-		// print solution to standard output
-		if (!solver.isSolvable())
-			StdOut.println("No solution possible");
-		else {
-			StdOut.println("Minimum number of moves = " + solver.moves());
-			for (Board board : solver.solution())
-				StdOut.println(board);
+			// print solution to standard output
+			if (!solver.isSolvable())
+				StdOut.println("No solution possible");
+			else {
+				StdOut.println("Minimum number of moves = " + solver.moves());
+				for (Board board : solver.solution())
+					StdOut.println(board);
+			}
 		}
 	}
 }
