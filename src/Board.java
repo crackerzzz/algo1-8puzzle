@@ -164,28 +164,33 @@ public class Board {
 
 	private static List<List<Integer>> buildNeighbouringCells(int i, int j, int size) {
 		final List<List<Integer>> list = new ArrayList<>();
-		int tempI = i - 1;
-		for (int x = 0; x < 3; x++) {
+
+		int[][] neighbours = new int[][] { { i - 1, j }, // above
+				{ i, j + 1 }, // right
+				{ i + 1, j }, // below
+				{ i, j - 1 }// left
+		};
+
+		for (int[] n : neighbours) {
+			int x = n[0];
+			int y = n[1];
 			// skip out of boundary cases
-			if (tempI < 0 || tempI >= size) {
-				tempI++;
+			if (x < 0 || x >= size || y < 0 || y >= size) {
 				continue;
 			}
-			int tempJ = j - 1;
-			for (int y = 0; y < 3; y++) {
-				// skip out of boundary cases or self
-				if ((tempI == i && tempJ == j) || tempJ < 0 || tempJ >= size) {
-					tempJ++;
-					continue;
-				}
-				final List<Integer> inner;
-				list.add(inner = new ArrayList<>(2));
-				inner.add(tempI);
-				inner.add(tempJ);
-				tempJ++;
-			}
-			tempI++;
+			final List<Integer> inner = new ArrayList<>();
+			list.add(inner);
+			inner.add(x);
+			inner.add(y);
 		}
+
+		/*
+		 * for (int x = 0; x < 2; x++) { // skip out of boundary cases if (i < 0 || i >=
+		 * size) { i++; continue; } for (int y = 0; y < 2; y++) { // skip out of
+		 * boundary cases or self if ((i == i && j == j) || j < 0 || j >= size) { j++;
+		 * continue; } final List<Integer> inner; list.add(inner = new ArrayList<>(2));
+		 * inner.add(i); inner.add(j); j++; } i++; }
+		 */
 		return list;
 	}
 
@@ -244,7 +249,7 @@ public class Board {
 
 	public static void main(String[] args) {
 		// read in the board specified in the filename
-		In in = new In("./8puzzle/puzzle-my.txt");
+		In in = new In("./8puzzle/puzzle12.txt");
 		int n = in.readInt();
 		int[][] tiles = new int[n][n];
 		for (int i = 0; i < n; i++) {

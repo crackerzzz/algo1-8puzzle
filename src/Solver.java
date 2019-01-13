@@ -1,5 +1,7 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.StreamSupport;
 
 import edu.princeton.cs.algs4.In;
@@ -22,7 +24,10 @@ public class Solver {
 		}
 		pq = new MinPQ<>();
 		pq.insert(new SearchNode(initial));
+		int step = 0;
 		do {
+			System.out.println("\nStep: " + step++);
+			printPQ(pq);
 			final SearchNode min = pq.delMin();
 			boards.add(min.current);
 			if (min.current.isGoal()) {
@@ -37,6 +42,10 @@ public class Solver {
 					pq.insert(s);
 				});
 		} while (true);
+	}
+
+	private void printPQ(final MinPQ<SearchNode> pq) {		
+		pq.forEach(System.out::print);
 	}
 
 	/***
@@ -70,6 +79,8 @@ public class Solver {
 		private Board predecessor;
 		private Board current;
 		private int moves;
+		private int manhattan;
+		private int priority;
 
 		public SearchNode(Board current) {
 			this(null, current, 0);
@@ -79,16 +90,23 @@ public class Solver {
 			this.predecessor = predecessor;
 			this.current = current;
 			this.moves = moves;
+			this.manhattan = current.manhattan();
+			this.priority = this.manhattan + this.moves;
 		}
 
 		@Override
 		public int compareTo(SearchNode other) {
-			return (this.current.manhattan() + this.moves) - (other.current.manhattan() + other.moves);
+			return this.priority - other.priority;
 		}
 
 		@Override
 		public String toString() {
-			return current.toString();
+			final StringBuilder builder = new StringBuilder();
+			builder.append("\npriority	= " + priority);
+			builder.append("\nmoves		= " + moves);
+			builder.append("\nmanhattan	= " + manhattan + "\n");
+			builder.append(current.toString());
+			return builder.toString();
 		}
 	}
 
@@ -98,8 +116,8 @@ public class Solver {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		int start = 12;
-		int end = 12;
+		int start = 14;
+		int end = 14;
 		for (int x = start; x <= end; x++) {
 			String filename = String.format("./8puzzle/puzzle%02d.txt", x);
 			System.out.println("File: " + filename);
