@@ -1,17 +1,12 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.stream.StreamSupport;
 
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.MinPQ;
+import edu.princeton.cs.algs4.Stack;
 import edu.princeton.cs.algs4.StdOut;
 
 public class Solver {
-	private final MinPQ<SearchNode> pq;
-	private int moves;
-	private final List<Board> boards = new ArrayList<>();
+	private SearchNode last;
 
 	/**
 	 * find a solution to the initial board (using the A* algorithm)
@@ -22,30 +17,29 @@ public class Solver {
 		if (initial == null) {
 			throw new IllegalArgumentException();
 		}
-		pq = new MinPQ<>();
+		final MinPQ<SearchNode> pq = new MinPQ<>();
 		pq.insert(new SearchNode(initial));
 		int step = 0;
 		do {
-			System.out.println("\nStep: " + step++);
+//			System.out.println("\nStep: " + step++);
 			printPQ(pq);
 			final SearchNode min = pq.delMin();
-			boards.add(min.current);
 			if (min.current.isGoal()) {
+				last = min;
 				break;
 			}
-			final int finalMoves = ++moves;
 			StreamSupport.stream(min.current.neighbors()
 				.spliterator(), false)
 				.filter(b -> min.predecessor == null || (min.predecessor != null && !min.predecessor.equals(b)))
-				.map(b -> new SearchNode(min.current, b, finalMoves))
+				.map(b -> new SearchNode(min, b))
 				.forEach(s -> {
 					pq.insert(s);
 				});
 		} while (true);
 	}
 
-	private void printPQ(final MinPQ<SearchNode> pq) {		
-		pq.forEach(System.out::print);
+	private void printPQ(final MinPQ<SearchNode> pq) {
+//		pq.forEach(System.out::print);
 	}
 
 	/***
@@ -63,7 +57,7 @@ public class Solver {
 	 * @return
 	 */
 	public int moves() {
-		return moves;
+		return last != null ? last.moves : -1;
 	}
 
 	/**
@@ -72,24 +66,37 @@ public class Solver {
 	 * @return
 	 */
 	public Iterable<Board> solution() {
-		return boards;
+		if (last == null)
+			return null;
+
+		SearchNode temp = last;
+		final Stack<Board> stack = new Stack<>();
+		do {
+			stack.push(temp.current);
+			temp = temp.predecessor;
+		} while (temp != null);
+		return stack;
 	}
 
 	private static class SearchNode implements Comparable<SearchNode> {
-		private Board predecessor;
+		private SearchNode predecessor;
 		private Board current;
 		private int moves;
 		private int manhattan;
 		private int priority;
 
 		public SearchNode(Board current) {
-			this(null, current, 0);
+			this(null, current);
 		}
 
-		public SearchNode(Board predecessor, Board current, int moves) {
+		public SearchNode(SearchNode predecessor, Board current) {
 			this.predecessor = predecessor;
 			this.current = current;
-			this.moves = moves;
+			if (predecessor != null) {
+				this.moves = predecessor.moves + 1;
+			} else {
+				this.moves = 0;
+			}
 			this.manhattan = current.manhattan();
 			this.priority = this.manhattan + this.moves;
 		}
@@ -116,8 +123,8 @@ public class Solver {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		int start = 14;
-		int end = 14;
+		int start = 1;
+		int end = 50;
 		for (int x = start; x <= end; x++) {
 			String filename = String.format("./8puzzle/puzzle%02d.txt", x);
 			System.out.println("File: " + filename);
@@ -140,8 +147,8 @@ public class Solver {
 				StdOut.println("No solution possible");
 			else {
 				StdOut.println("Minimum number of moves = " + solver.moves());
-				for (Board board : solver.solution())
-					StdOut.println(board);
+//				for (Board board : solver.solution())
+//					StdOut.println(board);
 			}
 		}
 	}

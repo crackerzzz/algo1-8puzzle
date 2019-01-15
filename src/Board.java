@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import edu.princeton.cs.algs4.In;
@@ -63,6 +62,7 @@ public class Board {
 				}
 
 				// calculate actual element that should be in the cell.
+				// + 1 is to make array value start at 1 rather than 0.
 				final int goal = i * n + j + 1;
 
 				// if not same, determine what cell that element should be in and calculate the
@@ -73,6 +73,9 @@ public class Board {
 					final int x = k / n;
 					final int y = k % n;
 					final int t = Math.abs(x - i) + Math.abs(y - j);
+//					System.out.println(String.format(
+//							"Goal for [%d, %d] = %d, Found %d (%d) which should be at [%d, %d]. Manhattan distance: %d",
+//							i, j, goal, blocks[i][j], k, x, y, t));
 					distance += t;
 				}
 			}
@@ -148,12 +151,7 @@ public class Board {
 			neighbourBoards.add(new Board(copy));
 		}
 
-		return new Iterable<Board>() {
-			@Override
-			public Iterator<Board> iterator() {
-				return neighbourBoards.iterator();
-			}
-		};
+		return neighbourBoards;
 	}
 
 	private static void swap(int[][] array, int x1, int y1, int x2, int y2) {
@@ -184,13 +182,6 @@ public class Board {
 			inner.add(y);
 		}
 
-		/*
-		 * for (int x = 0; x < 2; x++) { // skip out of boundary cases if (i < 0 || i >=
-		 * size) { i++; continue; } for (int y = 0; y < 2; y++) { // skip out of
-		 * boundary cases or self if ((i == i && j == j) || j < 0 || j >= size) { j++;
-		 * continue; } final List<Integer> inner; list.add(inner = new ArrayList<>(2));
-		 * inner.add(i); inner.add(j); j++; } i++; }
-		 */
 		return list;
 	}
 
@@ -249,7 +240,7 @@ public class Board {
 
 	public static void main(String[] args) {
 		// read in the board specified in the filename
-		In in = new In("./8puzzle/puzzle12.txt");
+		In in = new In("./8puzzle/puzzle-my.txt");
 		int n = in.readInt();
 		int[][] tiles = new int[n][n];
 		for (int i = 0; i < n; i++) {
@@ -261,7 +252,7 @@ public class Board {
 //		// solve the slider puzzle
 		Board initial = new Board(tiles);
 		System.out.println(initial);
-		System.out.println("hamming: " + initial.hamming());
+//		System.out.println("hamming: " + initial.hamming());
 		System.out.println("manhattan: " + initial.manhattan());
 		System.out.println("isGoal: " + initial.isGoal());
 		System.out.println("Neighbours: ");
