@@ -112,6 +112,15 @@ public class Board {
 
 	// a board that is obtained by exchanging any pair of blocks
 	public Board twin() {
+		final Board twinBoard = new Board(blocks);
+		for (int i = 0; i < n; i++) {
+			for (int j = 0; j < n - 1; j++) {
+				if (twinBoard.blocks[i][j] != 0 && twinBoard.blocks[i][j + 1] != 0) {
+					swap(twinBoard.blocks, i, j, i, j + 1);
+					return twinBoard;
+				}
+			}
+		}
 		return null;
 	}
 
@@ -185,7 +194,7 @@ public class Board {
 		return list;
 	}
 
-	public static int[][] deepCopy(int[][] original) {
+	private static int[][] deepCopy(int[][] original) {
 		if (original == null) {
 			return null;
 		}

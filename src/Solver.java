@@ -1,5 +1,3 @@
-import java.util.stream.StreamSupport;
-
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.MinPQ;
 import edu.princeton.cs.algs4.Stack;
@@ -19,27 +17,28 @@ public class Solver {
 		}
 		final MinPQ<SearchNode> pq = new MinPQ<>();
 		pq.insert(new SearchNode(initial));
-		int step = 0;
+
+		final MinPQ<SearchNode> twinPq = new MinPQ<>();
+		twinPq.insert(new SearchNode(initial.twin()));
+
 		do {
-//			System.out.println("\nStep: " + step++);
-			printPQ(pq);
-			final SearchNode min = pq.delMin();
-			if (min.current.isGoal()) {
-				last = min;
+			if (((last = solve(pq)) != null) || solve(twinPq) != null) {
 				break;
 			}
-			StreamSupport.stream(min.current.neighbors()
-				.spliterator(), false)
-				.filter(b -> min.predecessor == null || (min.predecessor != null && !min.predecessor.equals(b)))
-				.map(b -> new SearchNode(min, b))
-				.forEach(s -> {
-					pq.insert(s);
-				});
 		} while (true);
 	}
 
-	private void printPQ(final MinPQ<SearchNode> pq) {
-//		pq.forEach(System.out::print);
+	private SearchNode solve(final MinPQ<SearchNode> pq) {
+		final SearchNode min = pq.delMin();
+		if (min.board.isGoal()) {
+			return min;
+		}
+		for (Board b : min.board.neighbors()) {
+			if (min.predecessor == null || !min.predecessor.board.equals(b)) {
+				pq.insert(new SearchNode(min, b));
+			}
+		}
+		return null;
 	}
 
 	/***
@@ -48,7 +47,7 @@ public class Solver {
 	 * @return
 	 */
 	public boolean isSolvable() {
-		return true;
+		return last != null;
 	}
 
 	/**
@@ -72,7 +71,7 @@ public class Solver {
 		SearchNode temp = last;
 		final Stack<Board> stack = new Stack<>();
 		do {
-			stack.push(temp.current);
+			stack.push(temp.board);
 			temp = temp.predecessor;
 		} while (temp != null);
 		return stack;
@@ -80,24 +79,24 @@ public class Solver {
 
 	private static class SearchNode implements Comparable<SearchNode> {
 		private SearchNode predecessor;
-		private Board current;
+		private Board board;
 		private int moves;
 		private int manhattan;
 		private int priority;
 
-		public SearchNode(Board current) {
-			this(null, current);
+		public SearchNode(Board board) {
+			this(null, board);
 		}
 
-		public SearchNode(SearchNode predecessor, Board current) {
+		public SearchNode(SearchNode predecessor, Board board) {
 			this.predecessor = predecessor;
-			this.current = current;
+			this.board = board;
 			if (predecessor != null) {
 				this.moves = predecessor.moves + 1;
 			} else {
 				this.moves = 0;
 			}
-			this.manhattan = current.manhattan();
+			this.manhattan = board.manhattan();
 			this.priority = this.manhattan + this.moves;
 		}
 
@@ -112,7 +111,7 @@ public class Solver {
 			builder.append("\npriority	= " + priority);
 			builder.append("\nmoves		= " + moves);
 			builder.append("\nmanhattan	= " + manhattan + "\n");
-			builder.append(current.toString());
+			builder.append(board.toString());
 			return builder.toString();
 		}
 	}
@@ -123,10 +122,10 @@ public class Solver {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		int start = 1;
-		int end = 50;
+		int start = 0;
+		int end = 80;
 		for (int x = start; x <= end; x++) {
-			String filename = String.format("./8puzzle/puzzle%02d.txt", x);
+			String filename = String.format("./8puzzle/puzzle4x4-%02d.txt", x);
 			System.out.println("File: " + filename);
 			// read in the board specified in the filename
 			In in = new In(filename);
